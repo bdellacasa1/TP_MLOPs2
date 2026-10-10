@@ -224,7 +224,9 @@ Luego de un reentrenamiento exitoso, el nuevo modelo `champion` queda disponible
 
 ## 🛡️ Robustez, Calidad de Datos y Gobernanza
 
-El proyecto implementa prácticas avanzadas de ingeniería MLOps para garantizar la calidad del modelo y los datos en producción:
+El proyecto implementa prácticas avanzadas de ingeniería MLOps para garantizar la calidad del modelo y los datos en producción.
+
+La ficha del champion está en [MODEL_CARD.md](MODEL_CARD.md): para qué predice, qué columnas usa, el ROC AUC de la versión 7 y los valores medidos de la corrida `robustness_audit`.
 
 ### 1. Validación de Calidad de Datos (Fail-Fast)
 Antes del preprocesamiento, los datos se validan en el DAG de Airflow mediante la tarea `monitor_raw_data` (implementada con un `PythonOperator`). Esta tarea:
