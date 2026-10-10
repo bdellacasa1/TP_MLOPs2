@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+from src.data.lake import publish_training_outputs
 from src.data.load_data import load_and_prepare_data
 from src.models.preprocessing import prepare_features
 from src.models.train import train_models
@@ -136,6 +137,28 @@ def run_pipeline():
     ranked_models = assign_model_aliases(
         registration_results
     )
+
+    # ---------------------------------------------------------
+    # 8. Copia en el lake. Un fallo acá no vuelve a entrenar:
+    # el alias ya quedó asignado en MLflow.
+    # ---------------------------------------------------------
+
+    print("\n[8/8] Publicando curated y models...")
+
+    champion_version = ranked_models[0]["version"]
+    try:
+        publish_training_outputs(
+            X_train,
+            X_test,
+            y_train,
+            y_test,
+            champion_version,
+        )
+    except Exception as exc:
+        print(
+            "Advertencia: el champion quedó en MLflow, "
+            f"pero la copia al lake falló: {exc}"
+        )
 
     # ---------------------------------------------------------
     # Resumen final

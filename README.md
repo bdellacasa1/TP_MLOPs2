@@ -271,7 +271,9 @@ El pipeline ya no depende de internet (`gdown` en Google Drive) para cada entren
     ```bash
     python3 scripts/seed_minio.py
     ```
-2.  **Carga Resiliente**: El entrenamiento (`src.pipeline`) priorizará leer de tu caché local (`data/raw/`). Si los archivos no están, los descargará directamente de MinIO usando la red interna rápida de Docker.
+2.  **Carga Resiliente**: El entrenamiento (`src.pipeline`) priorizará leer de tu caché local (`data/raw/`). Si los archivos no están, los descargará directamente de MinIO usando la red interna rápida de Docker. La clave que lee es `raw/data.zip`.
+
+Al terminar, el pipeline copia al mismo bucket la tabla de las ocho columnas en `curated/train.parquet` y `curated/test.parquet`, y el artefacto del champion en `models/v<versión>/`. La API no lee esa copia: sigue cargando el alias de MLflow. Si la copia falla, el alias ya asignado no se revierte.
 
 ### Levantar el proyecto
 

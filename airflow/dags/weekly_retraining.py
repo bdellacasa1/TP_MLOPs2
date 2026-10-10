@@ -65,6 +65,14 @@ def weekly_airline_retraining():
         env={
             "MLFLOW_TRACKING_URI": MLFLOW_URI,
             "PYTHONPATH": "/workspace",
+            "AWS_ACCESS_KEY_ID": os.environ.get("AWS_ACCESS_KEY_ID", "minio"),
+            "AWS_SECRET_ACCESS_KEY": os.environ.get("AWS_SECRET_ACCESS_KEY", "minio123"),
+            "AWS_DEFAULT_REGION": "us-east-1",
+            "MLFLOW_S3_ENDPOINT_URL": os.environ.get(
+                "MLFLOW_S3_ENDPOINT_URL",
+                "http://minio:9000",
+            ),
+            "MLFLOW_BUCKET_NAME": os.environ.get("MLFLOW_BUCKET_NAME", "mlflow"),
         },
         append_env=True,
     )

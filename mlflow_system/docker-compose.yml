@@ -116,6 +116,11 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       JUPYTER_TOKEN: ${JUPYTER_TOKEN:-mlops-local}
       PYTHONPATH: /workspace
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minio}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minio123}
+      AWS_DEFAULT_REGION: us-east-1
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_BUCKET_NAME: ${MLFLOW_BUCKET_NAME:-mlflow}
 
     volumes:
       - ..:/workspace
@@ -325,6 +330,12 @@ services:
       PYTHONPATH: /workspace
 
       API_KEY: ${API_KEY:-airline-local-key}
+
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minio}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minio123}
+      AWS_DEFAULT_REGION: us-east-1
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_BUCKET_NAME: ${MLFLOW_BUCKET_NAME:-mlflow}
 
     command: scheduler
 
