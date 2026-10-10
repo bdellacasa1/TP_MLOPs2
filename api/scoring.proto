@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+// Misma predicción que POST /v1/predict: ocho campos y la respuesta del champion.
+
+message Passenger {
+  string gender = 1;
+  string customer_type = 2;
+  string type_of_travel = 3;
+  string travel_class = 4;
+  int32 age = 5;
+  int32 flight_distance = 6;
+  double departure_delay = 7;
+  double arrival_delay = 8;
+}
+
+message Prediction {
+  int32 prediction = 1;
+  string label = 2;
+  double probability = 3;
+  string model_name = 4;
+  string model_alias = 5;
+  string model_version = 6;
+}
+
+service Scoring {
+  rpc Predict(Passenger) returns (Prediction);
+}

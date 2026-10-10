@@ -178,6 +178,18 @@ X-API-Key: <API_KEY>
 
 La API carga en memoria el modelo `champion` al levantar. Este endpoint permite que la API recargue el modelo que actualmente tenga asignado el alias `champion` (Se usa una vez que Airflow termina de reentrenar el modelo).
 
+### gRPC
+
+El servicio gRPC está al lado de la API, en el puerto `50051`. El contrato está en `api/scoring.proto`: los mismos ocho campos y la misma salida (clase, probabilidad, alias y versión). Carga el champion una vez, con el mismo código que REST. La llamada es un pasajero y una respuesta. La clave viaja en la metadata `x-api-key`. Streamlit no usa este puerto.
+
+Dentro de la red de Docker la metadata no va cifrada. Fuera de esa red, el canal tendría que ir con TLS.
+
+Comparación del mismo pasajero por REST y por gRPC. Las dos predicciones tienen que coincidir. El comando imprime los dos tiempos:
+
+```bash
+docker compose -f mlflow_system/docker-compose.yml exec grpc python /app/scripts/compare_rest_grpc.py
+```
+
 ---
 
 ## Automatización del modelo con Airflow

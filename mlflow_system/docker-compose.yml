@@ -178,6 +178,34 @@ services:
       retries: 12
       start_period: 20s
 
+  grpc:
+    image: airline-api:latest
+    container_name: airline_grpc
+    restart: unless-stopped
+
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+    ports:
+      - "127.0.0.1:${GRPC_PORT:-50051}:50051"
+
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_NAME: airline_satisfaction_without_scores
+      MODEL_ALIAS: champion
+      API_KEY: ${API_KEY:-airline-local-key}
+      PREDICTION_LOG_PATH: /var/log/airline/predictions.jsonl
+      GRPC_PORT: "50051"
+
+    volumes:
+      - api_prediction_logs:/var/log/airline
+
+    command: ["python", "-m", "api.grpc_server"]
+
+    networks:
+      - mlflow_backend
+
   frontend:
     build:
       context: ..
