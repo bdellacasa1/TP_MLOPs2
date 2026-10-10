@@ -1,3 +1,5 @@
+import os
+
 import pendulum
 
 from airflow.sdk import dag, task
@@ -115,10 +117,12 @@ def weekly_airline_retraining():
     reload_api_model = BashOperator(
         task_id="reload_api_model",
         bash_command=(
-            f"curl -fsS "
-            f"-X POST "
-            f"{API_URL}/reload-model"
+            "curl -fsS -X POST "
+            "-H \"X-API-Key: ${API_KEY}\" "
+            f"{API_URL}/v1/reload-model"
         ),
+        env={"API_KEY": os.environ.get("API_KEY", "")},
+        append_env=True,
     )
 
     # ---------------------------------------------------------

@@ -12,6 +12,7 @@ st.set_page_config(
 
 # URL del backend (desde variables de entorno o local)
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+API_KEY = os.getenv("API_KEY", "")
 
 st.title("✈️ Airline Passenger Satisfaction")
 st.markdown("""
@@ -72,7 +73,12 @@ if submit_button:
     
     with st.spinner("Procesando predicción..."):
         try:
-            response = requests.post(f"{BACKEND_URL}/predict", json=payload, timeout=10)
+            response = requests.post(
+                f"{BACKEND_URL}/v1/predict",
+                json=payload,
+                headers={"X-API-Key": API_KEY},
+                timeout=10,
+            )
             
             if response.status_code == 200:
                 result = response.json()

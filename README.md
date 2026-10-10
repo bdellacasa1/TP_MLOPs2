@@ -103,7 +103,7 @@ flowchart TD
         Q["Predicción"]
         S["Response JSON"]
 
-        M -->|POST /predict| N
+        M -->|POST /v1/predict| N
         N --> O
         O --> P
         P --> Q
@@ -112,7 +112,7 @@ flowchart TD
     end
 
     K -->|Modelo publicado| P
-    A -->|Luego del reentrenamiento| R["POST /reload-model"]
+    A -->|Luego del reentrenamiento| R["POST /v1/reload-model"]
     R --> N
 ```
 
@@ -122,12 +122,17 @@ flowchart TD
 
 La API fue desarrollada utilizando **FastAPI** y las validaciones de entrada se realizan mediante **Pydantic**.
 
+`POST /v1/predict` y `POST /v1/reload-model` exigen el header `X-API-Key`. El valor es la variable `API_KEY` del entorno. `GET /health` queda abierto. Las rutas `/predict` y `/reload-model` siguen respondiendo el mismo contrato, también con la clave, hasta retirarlas.
+
+Cada predicción válida se agrega a un archivo JSONL (`PREDICTION_LOG_PATH`, por defecto `/var/log/airline/predictions.jsonl` dentro del contenedor). Un cuerpo inválido responde 422 y no se registra.
+
 ### Predicción
 
 Endpoint:
 
 ```text
-POST /predict
+POST /v1/predict
+X-API-Key: <API_KEY>
 ```
 
 Ejemplo de request:
@@ -167,7 +172,8 @@ GET /health
 ### Actualización del modelo
 
 ```text
-POST /reload-model
+POST /v1/reload-model
+X-API-Key: <API_KEY>
 ```
 
 La API carga en memoria el modelo `champion` al levantar. Este endpoint permite que la API recargue el modelo que actualmente tenga asignado el alias `champion` (Se usa una vez que Airflow termina de reentrenar el modelo).
@@ -194,7 +200,7 @@ El modelo se reentrena automáticamente de manera semanal.
    - `monitor_raw_data`: Validación de calidad del dataset crudo (*Fail-Fast*).
    - `run_training_pipeline`: Reentrenamiento de los modelos y log de métricas/artefactos en MLflow.
    - `validate_champion`: Verificación de la asignación del alias `champion` en MLflow.
-   - `reload_api_model`: Notificación a la API REST (`POST /reload-model`) para recargar en caliente el modelo `champion`.
+   - `reload_api_model`: Notificación a la API REST (`POST /v1/reload-model`, con `X-API-Key`) para recargar en caliente el modelo `champion`.
    - `validate_api`: Comprobación de salud de la API REST (`GET /health`).
 6. **Verificar estado final**: Confirmar que todas las tareas se ejecuten exitosamente (estado verde `success`). El modelo `champion` actualizado quedará servido inmediatamente por la API REST sin requerir un reinicio manual de contenedores.
 
