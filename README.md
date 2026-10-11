@@ -206,6 +206,20 @@ docker compose -f mlflow_system/docker-compose.yml exec streaming python /app/sc
 docker compose -f mlflow_system/docker-compose.yml exec streaming python /app/scripts/flight_close_consume.py
 ```
 
+### Aprendizaje federado
+
+`experiments/fedavg_logreg.py` simula una alianza de aerolíneas. No se registra en MLflow y no reemplaza al champion. La API, gRPC y el cierre de vuelos siguen puntuando con el XGBoost.
+
+El archivo es de una sola aerolínea. El script parte `train.csv` en cinco clientes, como si cada una se quedara con sus filas y mandara solo los coeficientes. El modelo que se promedia es una regresión logística con las mismas ocho columnas: el XGBoost no entrega un vector de pesos. Hay diez rondas. En cada una, cada cliente ajusta la logística y el servidor promedia los coeficientes según la cantidad de filas. Al lado se entrena la misma logística con todas las filas juntas.
+
+El reparto es al azar, con semilla 42, así que los cinco clientes quedan casi iguales. Por eso los dos resultados empatan. En la consola tienen que verse `roc_auc_centralizada=0.8342` y `roc_auc_federada=0.8362`. El modelo de la alianza sería el promedio, y solo si cada aerolínea conserva sus filas. El champion no se toca.
+
+Hacen falta `data/raw/train.csv` y `data/raw/test.csv`. Desde la raíz del repositorio:
+
+```bash
+python3 experiments/fedavg_logreg.py
+```
+
 ---
 
 ## Automatización del modelo con Airflow
