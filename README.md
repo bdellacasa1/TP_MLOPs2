@@ -13,6 +13,7 @@
 | **MLflow UI** | http://localhost:5001 | Tracking y Model Registry |
 | **Airflow UI** | http://localhost:8080 | Orquestación del reentrenamiento semanal |
 | **MinIO Console** | http://localhost:9001 | Almacenamiento S3 interno (credenciales en `.env`) |
+| **Redpanda** | `redpanda:9092` en la red de Docker | Broker del cierre de vuelos. No tiene pantalla |
 
 ## Descripción del proyecto
 
@@ -188,6 +189,21 @@ Comparación del mismo pasajero por REST y por gRPC. Las dos predicciones tienen
 
 ```bash
 docker compose -f mlflow_system/docker-compose.yml exec grpc python /app/scripts/compare_rest_grpc.py
+```
+
+### Cierre de vuelos
+
+Redpanda guarda un mensaje por pasajero del test, ordenado por demora de llegada. El topic `flight-close` tiene una sola partición: con más de una, el orden de la demora se mezclaría. Streamlit no publica ni lee ese topic.
+
+El productor lee `data/raw/test.csv`. Hay 83 demoras de llegada vacías; se publican como 0, porque el contrato del champion no acepta nulo. El consumidor puntúa cada mensaje por gRPC, con la misma clave. Cada 2.000 predicciones calcula la media. Si cae 0,05 respecto de la primera ventana, imprime la alerta. Las filas que no completan una ventana más no entran en esa cuenta.
+
+Si el consumidor se cae después de puntuar y antes de confirmar el offset, el broker puede entregar ese pasajero otra vez. Dentro de la misma corrida el consumidor recuerda el id de la fila y no lo vuelve a contar. Si el proceso se reinicia, esa memoria se pierde y un mensaje no confirmado puede puntuarse de nuevo.
+
+Primero el productor, después el consumidor. En la consola del consumidor tienen que verse la media de la primera ventana, la de la última y, si corresponde, la alerta. El grupo `flight-close` confirma los offsets: una segunda ejecución del consumidor no vuelve a leer esos mensajes. Para repetir la lectura hay que cambiar `KAFKA_GROUP`.
+
+```bash
+docker compose -f mlflow_system/docker-compose.yml exec streaming python /app/scripts/flight_close_produce.py
+docker compose -f mlflow_system/docker-compose.yml exec streaming python /app/scripts/flight_close_consume.py
 ```
 
 ---

@@ -206,6 +206,61 @@ services:
     networks:
       - mlflow_backend
 
+  redpanda:
+    image: redpandadata/redpanda:v24.2.11
+    container_name: airline_redpanda
+    restart: unless-stopped
+    user: "0:0"
+    command:
+      - redpanda
+      - start
+      - --mode
+      - dev-container
+      - --smp
+      - "1"
+      - --kafka-addr
+      - internal://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - internal://redpanda:9092
+    # El volumen de Docker queda en el home cifrado y Redpanda no arranca ahí: ese disco no admite O_DIRECT.
+    volumes:
+      - /var/tmp/airline_redpanda:/var/lib/redpanda/data
+    networks:
+      - mlflow_backend
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "info"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 15s
+
+  streaming:
+    build:
+      context: ..
+      dockerfile: mlflow_system/dockerfiles/streaming/Dockerfile
+    image: airline-streaming:latest
+    container_name: airline_streaming
+    restart: unless-stopped
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      grpc:
+        condition: service_started
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:9092
+      KAFKA_TOPIC: flight-close
+      KAFKA_GROUP: flight-close
+      GRPC_TARGET: grpc:50051
+      API_KEY: ${API_KEY:-airline-local-key}
+      TEST_FILE: /data/raw/test.csv
+      WINDOW: "2000"
+      DRIFT_DROP: "0.05"
+    volumes:
+      - ../data/raw:/data/raw:ro
+    command: ["sleep", "infinity"]
+    networks:
+      - mlflow_backend
+
   frontend:
     build:
       context: ..

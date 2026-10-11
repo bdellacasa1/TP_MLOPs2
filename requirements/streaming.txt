@@ -1,0 +1,4 @@
+pandas>=2.2,<3
+kafka-python>=2.0,<3
+grpcio>=1.84,<2
+protobuf>=7.35,<8
